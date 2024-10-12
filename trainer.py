@@ -17,9 +17,11 @@ class NLPTrainer:
     test_file: Text = ""
     epochs: int = 5
     learning_rate: float = 3e-4
+    device='cpu',
     def __post_init__(self):
         self.train_data = self.load_data(self.train_file)
         self.test_data = self.load_data(self.test_file)
+        self.device = torch.device('cuda' if torch.cuda.is_available() and 'cuda' in self.device else 'cpu')
         pass
     
     def load_data(self, file):
@@ -78,10 +80,10 @@ class NLPTrainer:
         tokenized_data = self.tokenize_inputs(self.train_data)
         train_loader = DataLoader(
             tokenized_data,
-            batch_size=8,
+            batch_size=32,
             shuffle=True
         )
-        model = EncoderModel("FacebookAI/roberta-base")
+        model = EncoderModel("FacebookAI/roberta-base").to(self.device)
         optimizer = optim.AdamW(model.parameters(), lr=self.learning_rate)
         criterion = nn.BCEWithLogitsLoss()
         
@@ -89,9 +91,9 @@ class NLPTrainer:
             model.train()
             total_loss = 0
             for batch in train_loader:
-                input_ids = batch["input_ids"]
-                attention_mask = batch["attention_mask"]
-                labels = batch["label"]
+                input_ids = batch["input_ids"].to(self.device)
+                attention_mask = batch["attention_mask"].to(self.device)
+                labels = batch["label"].to(self.device)
                 outputs = model(input_ids, attention_mask)
                 
                 loss = criterion(outputs, labels)
@@ -130,5 +132,6 @@ class NLPTrainer:
 if __name__ == "__main__":
     trainer = NLPTrainer(
         train_file="train.csv",
-        test_file="test.csv"
+        test_file="test.csv",
+        device='cuda:0',
     )
