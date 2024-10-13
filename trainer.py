@@ -10,7 +10,7 @@ import torch
 import json
 from tqdm import tqdm
 from sklearn.model_selection import train_test_split
-
+import os
 from encoder import EncoderModel
 
 
@@ -54,8 +54,8 @@ class NLPTrainer:
         return train_dataset
     
     def tokenizer(self):
-        # self.tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-        self.tokenizer = RobertaTokenizer.from_pretrained('roberta-base')
+        self.tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+        # self.tokenizer = RobertaTokenizer.from_pretrained('roberta-base')
     
     
     def tokenize_inputs(self, data, test = False):
@@ -107,7 +107,8 @@ class NLPTrainer:
             batch_size=64,
             shuffle=True
         )
-        model = EncoderModel("roberta-base").to(self.device)
+        # model = EncoderModel("roberta-base").to(self.device)
+        model = EncoderModel("bert-base-uncased").to(self.device)
         optimizer = optim.AdamW(model.parameters(), lr=self.learning_rate)
         criterion = nn.BCEWithLogitsLoss()
         
@@ -159,7 +160,8 @@ class NLPTrainer:
             
             print(f"Validation loss in epoch {epoch+1}: {average_val_loss}")
             print(f"Validation accuracy in epoch {epoch+1}: {accuracy:.4f}")
-            
+        
+        
         self.run_inference(model)
     
     def run_inference(self, model):
@@ -175,7 +177,7 @@ class NLPTrainer:
                 outputs = model(input_ids, attention_mask)
             
             prediction_value = torch.sigmoid(outputs)
-            predicted_label = 1 if prediction_value >= 0.37 else 0
+            predicted_label = 1 if prediction_value >= 0.5 else 0
             
             prediction.append(
                 {
@@ -190,14 +192,16 @@ class NLPTrainer:
             with open("predictions.json", "w+") as file:
                 json.dump(prediction, file, indent=4)
 
+
+
 if __name__ == "__main__":
     
     trainer = NLPTrainer(
         train_file="train.csv",
         test_file="test.csv",
         device='cuda:0',
-        learning_rate=5e-5,
-        epochs=20
+        learning_rate=1e-6,
+        epochs=10
     )
     
     trainer.trainer()

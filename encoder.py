@@ -7,14 +7,14 @@ from transformers import RobertaModel
 class EncoderModel(nn.Module):
     def __init__(self, model_name_or_path):
         super(EncoderModel, self).__init__()
-        # self.model = BertModel.from_pretrained(model_name_or_path)
-        self.model = RobertaModel.from_pretrained(model_name_or_path)
+        self.model = BertModel.from_pretrained(model_name_or_path)
+        # self.model = RobertaModel.from_pretrained(model_name_or_path)
         self.temperature = 0.1  # Temperature scaling parameter
         self.FFNetwork = nn.Sequential(
-            nn.Linear(self.model.config.hidden_size, 256),
+            nn.Linear(self.model.config.hidden_size, 128),
             nn.ReLU(),
-            nn.Linear(256, 128),
-            nn.ReLU(),
+            # nn.Linear(256, 128),
+            # nn.ReLU(),
             nn.Linear(128, 1)
         )
         
